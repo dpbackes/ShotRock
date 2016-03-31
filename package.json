@@ -1,0 +1,10 @@
+{
+  "name": "ShotRock",
+  "version": "0.1.0",
+  "main": "main.js",
+  "devDependencies": {
+    "del": "^1.1.1",
+    "gulp": "^3.8.11",
+    "gulp-typescript": "^2.6.0"
+  }
+}
