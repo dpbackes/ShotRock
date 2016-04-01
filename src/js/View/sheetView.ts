@@ -29,6 +29,11 @@ module View
             return this.renderingContext;
         }
 
+        get InsertMode() : InsertMode
+        {
+            return this.insertMode;
+        }
+
         private canvasElement : HTMLCanvasElement;
         private sheetModel : ViewModel.SheetModel;
         private renderingContext : CanvasRenderingContext2D;
@@ -38,6 +43,7 @@ module View
         private movingStone: ViewModel.StoneModel;
         private invalid: boolean;
         private mouseDown: boolean;
+        private insertMode: InsertMode = InsertMode.RedRock;
 
         constructor(canvasElement: HTMLCanvasElement, sheetModel: ViewModel.SheetModel)
         {
@@ -48,7 +54,14 @@ module View
             var self = this;
             sheetModel.SubscribeToStoneAdded(function(stone: ViewModel.StoneModel)
             {
-                self.stones.push(new View.StoneView(self, stone));
+                var stoneView = new View.StoneView(self, stone);
+                self.stones.push(stoneView);
+
+                if(self.insertMode === InsertMode.YellowRock)
+                {
+                    stoneView.ToggleColor();
+                }
+
                 self.invalid = true;
             });
 
@@ -90,7 +103,6 @@ module View
             }
 
             this.movingStone.Place(this.ToSheetCoordinates(x, y));
-            this.Invalidate();
         }
 
         OnMouseUp(x: number, y: number)
@@ -104,12 +116,29 @@ module View
 
             if(hitStone)
             {
-                hitStone.ToggleColor();
-                this.Invalidate();
+                return;
+            }
+
+            if(this.insertMode === InsertMode.Arrow)
+            {
                 return;
             }
 
             this.sheetModel.AddStone(this.ToSheetCoordinates(x, y));
+        }
+
+        NextInsertMode() {
+            switch (this.insertMode) {
+                case InsertMode.RedRock:
+                    this.insertMode = InsertMode.YellowRock;
+                    return;
+                case InsertMode.YellowRock:
+                    this.insertMode = InsertMode.Arrow;
+                    return;
+                case InsertMode.Arrow:
+                    this.insertMode = InsertMode.RedRock;
+                    return;
+            }
         }
 
         Paint()
@@ -245,5 +274,12 @@ module View
         {
             this.arrows.forEach(arrow => arrow.Paint());
         }
+    }
+
+    export enum InsertMode
+    {
+        RedRock,
+        YellowRock,
+        Arrow
     }
 }

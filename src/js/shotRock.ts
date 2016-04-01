@@ -68,6 +68,28 @@ function Export()
     window.location.href = sheetCanvas.toDataURL();
 }
 
+function ToggleMode()
+{
+    var icon = <HTMLBaseElement>document.getElementById("addIcon");
+
+    sheetView.NextInsertMode();
+
+    switch (sheetView.InsertMode) {
+        case View.InsertMode.RedRock:
+            icon.innerText = "add_circle";
+            icon.style.color = "red";
+            return;
+        case View.InsertMode.YellowRock:
+            icon.innerText = "add_circle";
+            icon.style.color = "yellow";
+            return;
+        case View.InsertMode.Arrow:
+            icon.innerText = "create";
+            icon.style.color = "black";
+            return;
+    }
+}
+
 function ConvertToCanvasAndCall(x: number, y: number, func: (x:number, y:number) => void)
 {
     var sheetCanvas = <HTMLCanvasElement>document.getElementById("mainSheet");
