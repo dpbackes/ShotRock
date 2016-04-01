@@ -28,6 +28,8 @@ var View;
     var ArrowView = (function () {
         function ArrowView(canvasElement) {
             this.points = new Array();
+            this.color = "#3366ff";
+            this.lineWidth = 5;
             this.renderingContext = (canvasElement).getContext('2d');
         }
         ArrowView.prototype.AddPoint = function (x, y) {
@@ -39,8 +41,8 @@ var View;
             }
             var originalLine = this.renderingContext.lineWidth;
             this.renderingContext.beginPath();
-            this.renderingContext.strokeStyle = "orange";
-            this.renderingContext.lineWidth = 2;
+            this.renderingContext.strokeStyle = this.color;
+            this.renderingContext.lineWidth = this.lineWidth;
             this.renderingContext.moveTo(this.points[0].X, this.points[0].Y);
             var self = this;
             this.points.forEach(function (point) {
@@ -243,15 +245,6 @@ var View;
             enumerable: true,
             configurable: true
         });
-        SheetView.prototype.OnClick = function (x, y) {
-            var hitStone = this.FindHitStone(x, y);
-            if (hitStone) {
-                hitStone.ToggleColor();
-                this.Invalidate();
-                return;
-            }
-            this.sheetModel.AddStone(this.ToSheetCoordinates(x, y));
-        };
         SheetView.prototype.OnMouseDown = function (x, y) {
             this.mouseDown = true;
             var foundStoneView = this.FindHitStone(x, y);
@@ -280,6 +273,13 @@ var View;
             this.currentArrow = null;
             this.movingStone = null;
             this.mouseDown = false;
+            var hitStone = this.FindHitStone(x, y);
+            if (hitStone) {
+                hitStone.ToggleColor();
+                this.Invalidate();
+                return;
+            }
+            this.sheetModel.AddStone(this.ToSheetCoordinates(x, y));
         };
         SheetView.prototype.Paint = function () {
             if (!this.invalid && !this.movingStone) {
@@ -365,18 +365,27 @@ window.onload = function () {
     window.onresize = function () {
         paintCanvas();
     };
-    sheetCanvas.onclick = function (mouseEvent) {
-        sheetView.OnClick(mouseEvent.x, mouseEvent.y);
-    };
     sheetCanvas.onmousedown = function (mouseEvent) {
         sheetView.OnMouseDown(mouseEvent.x, mouseEvent.y);
     };
+    sheetCanvas.addEventListener("touchstart", function (touchEvent) {
+        touchEvent.preventDefault();
+        sheetView.OnMouseDown(touchEvent.touches[0].pageX, touchEvent.touches[0].pageY);
+    }, false);
     sheetCanvas.onmousemove = function (mouseEvent) {
         sheetView.OnMouseMove(mouseEvent.x, mouseEvent.y);
     };
+    sheetCanvas.addEventListener("touchmove", function (touchEvent) {
+        touchEvent.preventDefault();
+        sheetView.OnMouseMove(touchEvent.touches[0].pageX, touchEvent.touches[0].pageY);
+    }, false);
     sheetCanvas.onmouseup = function (mouseEvent) {
         sheetView.OnMouseUp(mouseEvent.x, mouseEvent.y);
     };
+    sheetCanvas.addEventListener("touchend", function (touchEvent) {
+        touchEvent.preventDefault();
+        sheetView.OnMouseUp(touchEvent.changedTouches[0].pageX, touchEvent.changedTouches[0].pageY);
+    }, false);
     function paintCanvas() {
         sheetCanvas.width = window.innerWidth;
         sheetCanvas.height = window.innerHeight;
