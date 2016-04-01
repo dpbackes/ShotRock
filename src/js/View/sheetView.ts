@@ -1,200 +1,229 @@
+/// <reference path="arrowView.ts"/>
 /// <reference path="stoneView.ts"/>
 /// <reference path="../Helpers/PolarPoint.ts"/>
 /// <reference path="../Helpers/CartesianPoint.ts"/>
 /// <reference path="../Helpers/CoordinateSystems.ts"/>
 /// <reference path="../ViewModel/sheetModel.ts"/>
 
-module View 
+module View
 {
-	export class SheetView 
-	{
-		get HouseCenterX() : number
-		{
-			return this.canvasElement.width/2;
-		}
+    export class SheetView
+    {
+        get HouseCenterX() : number
+        {
+            return this.canvasElement.width/2;
+        }
 
-		get HouseCenterY() : number
-		{
-			return this.canvasElement.height/4;
-		}
+        get HouseCenterY() : number
+        {
+            return this.canvasElement.height/4;
+        }
 
-		get HouseRadius() : number
-		{
-			return Math.min(this.canvasElement.width, this.canvasElement.height/2)/2 - 1;
-		}
-		
-		get RenderingContext() : CanvasRenderingContext2D
-		{
-			return this.renderingContext;
-		}
+        get HouseRadius() : number
+        {
+            return Math.min(this.canvasElement.width, this.canvasElement.height/2)/2 - 1;
+        }
 
-		private canvasElement : HTMLCanvasElement;
-		private sheetModel : ViewModel.SheetModel;
-		private renderingContext : CanvasRenderingContext2D;
-		private stones: View.StoneView[] = new Array<View.StoneView>();
-		private movingStone: ViewModel.StoneModel;
-		private invalid: boolean;
+        get RenderingContext() : CanvasRenderingContext2D
+        {
+            return this.renderingContext;
+        }
 
-		constructor(canvasElement: HTMLCanvasElement, sheetModel: ViewModel.SheetModel)
-		{
-			this.canvasElement = canvasElement;
-			this.sheetModel = sheetModel;
-			this.renderingContext = <CanvasRenderingContext2D>(canvasElement).getContext('2d');
+        private canvasElement : HTMLCanvasElement;
+        private sheetModel : ViewModel.SheetModel;
+        private renderingContext : CanvasRenderingContext2D;
+        private stones: View.StoneView[] = new Array<View.StoneView>();
+        private arrows: View.ArrowView[] = new Array<View.ArrowView>();
+        private currentArrow: View.ArrowView;
+        private movingStone: ViewModel.StoneModel;
+        private invalid: boolean;
+        private mouseDown: boolean;
 
-			var self = this;
-			sheetModel.SubscribeToStoneAdded(function(stone: ViewModel.StoneModel) 
-			{
-				self.stones.push(new View.StoneView(self, stone));
-				self.invalid = true;
-			});
+        constructor(canvasElement: HTMLCanvasElement, sheetModel: ViewModel.SheetModel)
+        {
+            this.canvasElement = canvasElement;
+            this.sheetModel = sheetModel;
+            this.renderingContext = <CanvasRenderingContext2D>(canvasElement).getContext('2d');
 
-			this.invalid = true;
-		}
+            var self = this;
+            sheetModel.SubscribeToStoneAdded(function(stone: ViewModel.StoneModel)
+            {
+                self.stones.push(new View.StoneView(self, stone));
+                self.invalid = true;
+            });
 
-		OnClick(x: number, y: number)
-		{
-			var hitStone = this.FindHitStone(x, y);
-			
-			if(hitStone)
-			{
-				hitStone.ToggleColor();
-				this.Invalidate();
-				return;
-			}
+            this.invalid = true;
+        }
 
-			this.sheetModel.AddStone(this.ToSheetCoordinates(x, y));
-		}
-		
-		OnMouseDown(x: number, y: number)
-		{
-			var foundStoneView = this.FindHitStone(x, y);
+        OnClick(x: number, y: number)
+        {
+            var hitStone = this.FindHitStone(x, y);
 
-			if(!foundStoneView)
-			{
-				return;
-			}
+            if(hitStone)
+            {
+                hitStone.ToggleColor();
+                this.Invalidate();
+                return;
+            }
 
-			this.movingStone = foundStoneView.Stone;
-		}
+            this.sheetModel.AddStone(this.ToSheetCoordinates(x, y));
+        }
 
-		OnMouseMove(x: number, y: number)
-		{
-			if(!this.movingStone)
-			{
-				return;
-			}
+        OnMouseDown(x: number, y: number)
+        {
+            this.mouseDown = true;
 
-			this.movingStone.Place(this.ToSheetCoordinates(x, y));
-			this.Invalidate();
-		}
+            var foundStoneView = this.FindHitStone(x, y);
 
-		OnMouseUp(x: number, y: number)
-		{
-			this.movingStone = null;
-		}
+            if(!foundStoneView)
+            {
+                return;
+            }
 
-		Paint() 
-		{
-			if(!this.invalid && !this.movingStone)
-			{
-				return;
-			}
+            this.movingStone = foundStoneView.Stone;
+        }
 
-			this.renderingContext.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
+        OnMouseMove(x: number, y: number)
+        {
+            if(!this.mouseDown)
+            {
+                return;
+            }
 
-			this.DrawRings();
+            if(!this.movingStone)
+            {
+                if(this.currentArrow == null)
+                {
+                    this.currentArrow = new ArrowView(this.canvasElement);
+                    this.arrows.push(this.currentArrow);
+                }
 
-			this.DrawTLine();
+                this.currentArrow.AddPoint(x, y);
+                this.currentArrow.Paint();
+                return;
+            }
 
-			this.DrawCenterLine();
+            this.movingStone.Place(this.ToSheetCoordinates(x, y));
+            this.Invalidate();
+        }
 
-			this.PaintStones();
+        OnMouseUp(x: number, y: number)
+        {
+            this.currentArrow = null;
+            this.movingStone = null;
 
-			this.invalid = false;
-		}
+            this.mouseDown = false;
+        }
 
-		Invalidate()
-		{
-			this.invalid = true;
-		}
+        Paint()
+        {
+            if(!this.invalid && !this.movingStone)
+            {
+                return;
+            }
 
-		private FindHitStone(x: number, y: number) : View.StoneView
-		{
-			var foundStone = null;
-			this.stones.some(stoneView => {
-				if(stoneView.IsHit(x, y)){
-					foundStone = stoneView;
-					return true;
-				}
-			});
+            this.renderingContext.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
 
-			return foundStone;
-		}
+            this.DrawRings();
 
-		private ToSheetCoordinates(x: number, y: number) : Helpers.PolarPoint
-		{
-			x = x - this.HouseCenterX;
-			y = y - this.HouseCenterY;
+            this.DrawTLine();
 
-			var polarCoord = Helpers.CoordinateSystems.ToPolar(x, y);
+            this.DrawCenterLine();
 
-			return new Helpers.PolarPoint(polarCoord.Angle, polarCoord.Radius/this.HouseRadius);
-		}
+            this.PaintStones();
 
-		private DrawRings()
-		{
-			var x = this.canvasElement.width/2;
-			var y = this.canvasElement.height/4;
+            this.PaintArrows();
 
-			this.PaintRing(x, y, this.HouseRadius, "blue");
+            this.invalid = false;
+        }
 
-			this.PaintRing(x, y, (8/12) * this.HouseRadius, "white");
+        Invalidate()
+        {
+            this.invalid = true;
+        }
 
-			this.PaintRing(x, y, (4/12) * this.HouseRadius, "red");
+        private FindHitStone(x: number, y: number) : View.StoneView
+        {
+            var foundStone = null;
+            this.stones.some(stoneView => {
+                if(stoneView.IsHit(x, y)){
+                    foundStone = stoneView;
+                    return true;
+                }
+            });
 
-			this.PaintRing(x, y, (1/12) * this.HouseRadius, "white");
+            return foundStone;
+        }
 
-			this.PaintStones();
-		}
+        private ToSheetCoordinates(x: number, y: number) : Helpers.PolarPoint
+        {
+            x = x - this.HouseCenterX;
+            y = y - this.HouseCenterY;
 
-		private DrawTLine()
-		{
-			var y = this.canvasElement.height / 4;
-			var width = this.canvasElement.width;
+            var polarCoord = Helpers.CoordinateSystems.ToPolar(x, y);
 
-			this.renderingContext.beginPath();
-			this.renderingContext.strokeStyle = "black";
-			this.renderingContext.moveTo(0, y);
-			this.renderingContext.lineTo(width, y);
-			this.renderingContext.stroke();
-			this.renderingContext.closePath();
-		}
-		
-		private DrawCenterLine()
-		{
-			var x = this.canvasElement.width / 2;
-			var height = this.canvasElement.height;
+            return new Helpers.PolarPoint(polarCoord.Angle, polarCoord.Radius/this.HouseRadius);
+        }
 
-			this.renderingContext.beginPath();
-			this.renderingContext.strokeStyle = "black";
-			this.renderingContext.moveTo(x, 0);
-			this.renderingContext.lineTo(x, height);
-			this.renderingContext.stroke();
-			this.renderingContext.closePath();
-		}
+        private DrawRings()
+        {
+            var x = this.canvasElement.width/2;
+            var y = this.canvasElement.height/4;
 
-		private PaintRing(x: number, y: number, radius: number, color: string)
-		{
-			this.renderingContext.beginPath();
-			this.renderingContext.arc(x, y, radius, 0, 2*Math.PI);
-			this.renderingContext.fillStyle = color;
-			this.renderingContext.fill();
-			this.renderingContext.closePath();
-		}
+            this.PaintRing(x, y, this.HouseRadius, "blue");
 
-		private PaintStones()
-		{
-			this.stones.forEach(stone => stone.Paint());
-		}
-	}
+            this.PaintRing(x, y, (8/12) * this.HouseRadius, "white");
+
+            this.PaintRing(x, y, (4/12) * this.HouseRadius, "red");
+
+            this.PaintRing(x, y, (1/12) * this.HouseRadius, "white");
+
+            this.PaintStones();
+        }
+
+        private DrawTLine()
+        {
+            var y = this.canvasElement.height / 4;
+            var width = this.canvasElement.width;
+
+            this.renderingContext.beginPath();
+            this.renderingContext.strokeStyle = "black";
+            this.renderingContext.moveTo(0, y);
+            this.renderingContext.lineTo(width, y);
+            this.renderingContext.stroke();
+            this.renderingContext.closePath();
+        }
+
+        private DrawCenterLine()
+        {
+            var x = this.canvasElement.width / 2;
+            var height = this.canvasElement.height;
+
+            this.renderingContext.beginPath();
+            this.renderingContext.strokeStyle = "black";
+            this.renderingContext.moveTo(x, 0);
+            this.renderingContext.lineTo(x, height);
+            this.renderingContext.stroke();
+            this.renderingContext.closePath();
+        }
+
+        private PaintRing(x: number, y: number, radius: number, color: string)
+        {
+            this.renderingContext.beginPath();
+            this.renderingContext.arc(x, y, radius, 0, 2*Math.PI);
+            this.renderingContext.fillStyle = color;
+            this.renderingContext.fill();
+            this.renderingContext.closePath();
+        }
+
+        private PaintStones()
+        {
+            this.stones.forEach(stone => stone.Paint());
+        }
+
+        private PaintArrows()
+        {
+            this.arrows.forEach(arrow => arrow.Paint());
+        }
+    }
 }
