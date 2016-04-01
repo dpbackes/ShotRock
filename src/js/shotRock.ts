@@ -1,11 +1,14 @@
 /// <reference path="./View/sheetView.ts"/>
 /// <reference path="./ViewModel/sheetModel.ts"/>
+
+var sheetView : View.SheetView;
+
 window.onload = function()
 {
     var sheetCanvas = <HTMLCanvasElement>document.getElementById("mainSheet");
 
     var sheetModel = new ViewModel.SheetModel();
-    var sheetView = new View.SheetView(sheetCanvas, sheetModel);
+    sheetView = new View.SheetView(sheetCanvas, sheetModel);
 
     window.onresize = function(){
          paintCanvas();
@@ -54,3 +57,11 @@ window.onload = function()
 
     paintCanvas();
 };
+
+function Export() {
+    var sheetCanvas = <HTMLCanvasElement>document.getElementById("mainSheet");
+
+    sheetView.PrepareExport();
+
+    window.location.href = sheetCanvas.toDataURL();
+}

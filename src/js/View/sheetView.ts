@@ -99,7 +99,7 @@ module View
             this.movingStone = null;
 
             this.mouseDown = false;
-            
+
             var hitStone = this.FindHitStone(x, y);
 
             if(hitStone)
@@ -137,6 +137,15 @@ module View
         Invalidate()
         {
             this.invalid = true;
+        }
+
+        PrepareExport()
+        {
+            this.renderingContext.font = "15px Arial";
+            this.renderingContext.fillStyle = "blue";
+            var text = "http://dpbackes.github.io/ShotRock";
+            var textSize = this.renderingContext.measureText(text);
+            this.renderingContext.fillText(text, this.canvasElement.width - textSize.width - 5, this.canvasElement.height - 5);
         }
 
         private FindHitStone(x: number, y: number) : View.StoneView
