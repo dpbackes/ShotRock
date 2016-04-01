@@ -211,6 +211,8 @@ module View
 
         private DrawBorder()
         {
+            this.renderingContext.fillStyle = "white";
+            this.renderingContext.fillRect(0, 0, this.canvasElement.width, this.canvasElement.height);
             this.renderingContext.strokeRect(0, 0, this.canvasElement.width, this.canvasElement.height);
         }
 
