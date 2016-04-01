@@ -207,12 +207,17 @@ var View;
         function SheetView(canvasElement, sheetModel) {
             this.stones = new Array();
             this.arrows = new Array();
+            this.insertMode = InsertMode.RedRock;
             this.canvasElement = canvasElement;
             this.sheetModel = sheetModel;
             this.renderingContext = (canvasElement).getContext('2d');
             var self = this;
             sheetModel.SubscribeToStoneAdded(function (stone) {
-                self.stones.push(new View.StoneView(self, stone));
+                var stoneView = new View.StoneView(self, stone);
+                self.stones.push(stoneView);
+                if (self.insertMode === InsertMode.YellowRock) {
+                    stoneView.ToggleColor();
+                }
                 self.invalid = true;
             });
             this.invalid = true;
@@ -245,6 +250,13 @@ var View;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(SheetView.prototype, "InsertMode", {
+            get: function () {
+                return this.insertMode;
+            },
+            enumerable: true,
+            configurable: true
+        });
         SheetView.prototype.OnMouseDown = function (x, y) {
             this.mouseDown = true;
             var foundStoneView = this.FindHitStone(x, y);
@@ -267,7 +279,6 @@ var View;
                 return;
             }
             this.movingStone.Place(this.ToSheetCoordinates(x, y));
-            this.Invalidate();
         };
         SheetView.prototype.OnMouseUp = function (x, y) {
             this.currentArrow = null;
@@ -275,11 +286,25 @@ var View;
             this.mouseDown = false;
             var hitStone = this.FindHitStone(x, y);
             if (hitStone) {
-                hitStone.ToggleColor();
-                this.Invalidate();
+                return;
+            }
+            if (this.insertMode === InsertMode.Arrow) {
                 return;
             }
             this.sheetModel.AddStone(this.ToSheetCoordinates(x, y));
+        };
+        SheetView.prototype.NextInsertMode = function () {
+            switch (this.insertMode) {
+                case InsertMode.RedRock:
+                    this.insertMode = InsertMode.YellowRock;
+                    return;
+                case InsertMode.YellowRock:
+                    this.insertMode = InsertMode.Arrow;
+                    return;
+                case InsertMode.Arrow:
+                    this.insertMode = InsertMode.RedRock;
+                    return;
+            }
         };
         SheetView.prototype.Paint = function () {
             if (!this.invalid && !this.movingStone) {
@@ -372,6 +397,12 @@ var View;
         return SheetView;
     }());
     View.SheetView = SheetView;
+    (function (InsertMode) {
+        InsertMode[InsertMode["RedRock"] = 0] = "RedRock";
+        InsertMode[InsertMode["YellowRock"] = 1] = "YellowRock";
+        InsertMode[InsertMode["Arrow"] = 2] = "Arrow";
+    })(View.InsertMode || (View.InsertMode = {}));
+    var InsertMode = View.InsertMode;
 })(View || (View = {}));
 var sheetView;
 window.onload = function () {
@@ -414,6 +445,24 @@ function Export() {
     var sheetCanvas = document.getElementById("mainSheet");
     sheetView.PrepareExport();
     window.location.href = sheetCanvas.toDataURL();
+}
+function ToggleMode() {
+    var icon = document.getElementById("addIcon");
+    sheetView.NextInsertMode();
+    switch (sheetView.InsertMode) {
+        case View.InsertMode.RedRock:
+            icon.innerText = "add_circle";
+            icon.style.color = "red";
+            return;
+        case View.InsertMode.YellowRock:
+            icon.innerText = "add_circle";
+            icon.style.color = "yellow";
+            return;
+        case View.InsertMode.Arrow:
+            icon.innerText = "create";
+            icon.style.color = "black";
+            return;
+    }
 }
 function ConvertToCanvasAndCall(x, y, func) {
     var sheetCanvas = document.getElementById("mainSheet");

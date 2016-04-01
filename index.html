@@ -8,7 +8,8 @@
   <body>
       <div style="position: absolute; bottom: 0; width: 100%; pointer-events: none;">
         <a onclick="location.reload();" style="pointer-events: all;"><i class="material-icons" style="cursor: pointer; font-size: 5em">refresh</i></a>
-        <a onclick="Export()" style="float: right; pointer-events: all;"><i class="material-icons" style="cursor: pointer; font-size: 5em">share</i></a>
+        <a onclick="ToggleMode();" style="pointer-events: all;"><i id="addIcon" class="material-icons" style="cursor: pointer; font-size: 5em; color: red">add_circle</i></a>
+        <a onclick="Export();" style="float: right; pointer-events: all;"><i class="material-icons" style="cursor: pointer; font-size: 5em">share</i></a>
       </div>
       <canvas id="mainSheet" style="margin-left: auto; margin-right: auto; display: block;">
       </canvas>
