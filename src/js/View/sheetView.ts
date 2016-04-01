@@ -55,20 +55,6 @@ module View
             this.invalid = true;
         }
 
-        OnClick(x: number, y: number)
-        {
-            var hitStone = this.FindHitStone(x, y);
-
-            if(hitStone)
-            {
-                hitStone.ToggleColor();
-                this.Invalidate();
-                return;
-            }
-
-            this.sheetModel.AddStone(this.ToSheetCoordinates(x, y));
-        }
-
         OnMouseDown(x: number, y: number)
         {
             this.mouseDown = true;
@@ -113,6 +99,17 @@ module View
             this.movingStone = null;
 
             this.mouseDown = false;
+            
+            var hitStone = this.FindHitStone(x, y);
+
+            if(hitStone)
+            {
+                hitStone.ToggleColor();
+                this.Invalidate();
+                return;
+            }
+
+            this.sheetModel.AddStone(this.ToSheetCoordinates(x, y));
         }
 
         Paint()
