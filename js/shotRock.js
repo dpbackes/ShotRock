@@ -296,7 +296,10 @@ var View;
         };
         SheetView.prototype.Invalidate = function () {
             this.invalid = true;
-            this.canvasElement.width = this.HouseRadius * 2 + 100;
+            var desiredWidth = this.HouseRadius * 2 + 100;
+            if (this.canvasElement.width !== desiredWidth) {
+                this.canvasElement.width = desiredWidth;
+            }
         };
         SheetView.prototype.PrepareExport = function () {
             this.renderingContext.font = "15px Arial";
