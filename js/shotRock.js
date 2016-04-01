@@ -296,6 +296,13 @@ var View;
         SheetView.prototype.Invalidate = function () {
             this.invalid = true;
         };
+        SheetView.prototype.PrepareExport = function () {
+            this.renderingContext.font = "15px Arial";
+            this.renderingContext.fillStyle = "blue";
+            var text = "http://dpbackes.github.io/ShotRock";
+            var textSize = this.renderingContext.measureText(text);
+            this.renderingContext.fillText(text, this.canvasElement.width - textSize.width - 5, this.canvasElement.height - 5);
+        };
         SheetView.prototype.FindHitStone = function (x, y) {
             var foundStone = null;
             this.stones.some(function (stoneView) {
@@ -358,10 +365,11 @@ var View;
     }());
     View.SheetView = SheetView;
 })(View || (View = {}));
+var sheetView;
 window.onload = function () {
     var sheetCanvas = document.getElementById("mainSheet");
     var sheetModel = new ViewModel.SheetModel();
-    var sheetView = new View.SheetView(sheetCanvas, sheetModel);
+    sheetView = new View.SheetView(sheetCanvas, sheetModel);
     window.onresize = function () {
         paintCanvas();
     };
@@ -394,3 +402,8 @@ window.onload = function () {
     setInterval(function () { sheetView.Paint(); }, 30);
     paintCanvas();
 };
+function Export() {
+    var sheetCanvas = document.getElementById("mainSheet");
+    sheetView.PrepareExport();
+    window.location.href = sheetCanvas.toDataURL();
+}
