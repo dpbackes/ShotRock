@@ -350,6 +350,8 @@ var View;
             return new Helpers.PolarPoint(polarCoord.Angle, polarCoord.Radius / this.HouseRadius);
         };
         SheetView.prototype.DrawBorder = function () {
+            this.renderingContext.fillStyle = "white";
+            this.renderingContext.fillRect(0, 0, this.canvasElement.width, this.canvasElement.height);
             this.renderingContext.strokeRect(0, 0, this.canvasElement.width, this.canvasElement.height);
         };
         SheetView.prototype.DrawRings = function () {
