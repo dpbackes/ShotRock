@@ -121,6 +121,8 @@ module View
 
             this.renderingContext.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
 
+            this.DrawBorder();
+
             this.DrawRings();
 
             this.DrawTLine();
@@ -137,6 +139,8 @@ module View
         Invalidate()
         {
             this.invalid = true;
+
+            this.canvasElement.width = this.HouseRadius*2 + 100;
         }
 
         PrepareExport()
@@ -169,6 +173,11 @@ module View
             var polarCoord = Helpers.CoordinateSystems.ToPolar(x, y);
 
             return new Helpers.PolarPoint(polarCoord.Angle, polarCoord.Radius/this.HouseRadius);
+        }
+
+        private DrawBorder()
+        {
+            this.renderingContext.strokeRect(0, 0, this.canvasElement.width, this.canvasElement.height);
         }
 
         private DrawRings()

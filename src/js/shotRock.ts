@@ -1,3 +1,4 @@
+/// <reference path="./Helpers/CartesianPoint.ts"/>
 /// <reference path="./View/sheetView.ts"/>
 /// <reference path="./ViewModel/sheetModel.ts"/>
 
@@ -16,35 +17,35 @@ window.onload = function()
 
     sheetCanvas.onmousedown = function(mouseEvent: MouseEvent)
     {
-        sheetView.OnMouseDown(mouseEvent.x, mouseEvent.y);
+        ConvertToCanvasAndCall(mouseEvent.x, mouseEvent.y, (x: number, y: number) => sheetView.OnMouseDown(x, y));
     }
 
     sheetCanvas.addEventListener("touchstart", (touchEvent: TouchEvent) =>
     {
         touchEvent.preventDefault();
-        sheetView.OnMouseDown(touchEvent.touches[0].pageX, touchEvent.touches[0].pageY);
+        ConvertToCanvasAndCall(touchEvent.touches[0].pageX, touchEvent.touches[0].pageY, (x: number, y: number) => sheetView.OnMouseDown(x, y));
     }, false);
 
     sheetCanvas.onmousemove = function(mouseEvent: MouseEvent)
     {
-        sheetView.OnMouseMove(mouseEvent.x, mouseEvent.y);
+        ConvertToCanvasAndCall(mouseEvent.x, mouseEvent.y, (x: number, y: number) => sheetView.OnMouseMove(x, y));
     }
 
     sheetCanvas.addEventListener("touchmove", (touchEvent: TouchEvent) =>
     {
         touchEvent.preventDefault();
-        sheetView.OnMouseMove(touchEvent.touches[0].pageX, touchEvent.touches[0].pageY);
+        ConvertToCanvasAndCall(touchEvent.touches[0].pageX, touchEvent.touches[0].pageY, (x: number, y: number) => sheetView.OnMouseMove(x, y));
     }, false);
 
     sheetCanvas.onmouseup = function(mouseEvent: MouseEvent)
     {
-        sheetView.OnMouseUp(mouseEvent.x, mouseEvent.y);
+        ConvertToCanvasAndCall(mouseEvent.x, mouseEvent.y, (x: number, y: number) => sheetView.OnMouseUp(x, y));
     }
 
     sheetCanvas.addEventListener("touchend", (touchEvent: TouchEvent) =>
     {
         touchEvent.preventDefault();
-        sheetView.OnMouseUp(touchEvent.changedTouches[0].pageX, touchEvent.changedTouches[0].pageY);
+        ConvertToCanvasAndCall(touchEvent.changedTouches[0].pageX, touchEvent.changedTouches[0].pageY, (x: number, y: number) => sheetView.OnMouseUp(x, y));
     }, false);
 
     function paintCanvas() {
@@ -58,10 +59,19 @@ window.onload = function()
     paintCanvas();
 };
 
-function Export() {
+function Export()
+{
     var sheetCanvas = <HTMLCanvasElement>document.getElementById("mainSheet");
 
     sheetView.PrepareExport();
 
     window.location.href = sheetCanvas.toDataURL();
+}
+
+function ConvertToCanvasAndCall(x: number, y: number, func: (x:number, y:number) => void)
+{
+    var sheetCanvas = <HTMLCanvasElement>document.getElementById("mainSheet");
+    var rect = sheetCanvas.getBoundingClientRect();
+
+    func(x - rect.left, y - rect.top);
 }
