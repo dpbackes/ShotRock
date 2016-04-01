@@ -286,6 +286,7 @@ var View;
                 return;
             }
             this.renderingContext.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
+            this.DrawBorder();
             this.DrawRings();
             this.DrawTLine();
             this.DrawCenterLine();
@@ -295,6 +296,7 @@ var View;
         };
         SheetView.prototype.Invalidate = function () {
             this.invalid = true;
+            this.canvasElement.width = this.HouseRadius * 2 + 100;
         };
         SheetView.prototype.PrepareExport = function () {
             this.renderingContext.font = "15px Arial";
@@ -318,6 +320,9 @@ var View;
             y = y - this.HouseCenterY;
             var polarCoord = Helpers.CoordinateSystems.ToPolar(x, y);
             return new Helpers.PolarPoint(polarCoord.Angle, polarCoord.Radius / this.HouseRadius);
+        };
+        SheetView.prototype.DrawBorder = function () {
+            this.renderingContext.strokeRect(0, 0, this.canvasElement.width, this.canvasElement.height);
         };
         SheetView.prototype.DrawRings = function () {
             var x = this.canvasElement.width / 2;
@@ -374,25 +379,25 @@ window.onload = function () {
         paintCanvas();
     };
     sheetCanvas.onmousedown = function (mouseEvent) {
-        sheetView.OnMouseDown(mouseEvent.x, mouseEvent.y);
+        ConvertToCanvasAndCall(mouseEvent.x, mouseEvent.y, function (x, y) { return sheetView.OnMouseDown(x, y); });
     };
     sheetCanvas.addEventListener("touchstart", function (touchEvent) {
         touchEvent.preventDefault();
-        sheetView.OnMouseDown(touchEvent.touches[0].pageX, touchEvent.touches[0].pageY);
+        ConvertToCanvasAndCall(touchEvent.touches[0].pageX, touchEvent.touches[0].pageY, function (x, y) { return sheetView.OnMouseDown(x, y); });
     }, false);
     sheetCanvas.onmousemove = function (mouseEvent) {
-        sheetView.OnMouseMove(mouseEvent.x, mouseEvent.y);
+        ConvertToCanvasAndCall(mouseEvent.x, mouseEvent.y, function (x, y) { return sheetView.OnMouseMove(x, y); });
     };
     sheetCanvas.addEventListener("touchmove", function (touchEvent) {
         touchEvent.preventDefault();
-        sheetView.OnMouseMove(touchEvent.touches[0].pageX, touchEvent.touches[0].pageY);
+        ConvertToCanvasAndCall(touchEvent.touches[0].pageX, touchEvent.touches[0].pageY, function (x, y) { return sheetView.OnMouseMove(x, y); });
     }, false);
     sheetCanvas.onmouseup = function (mouseEvent) {
-        sheetView.OnMouseUp(mouseEvent.x, mouseEvent.y);
+        ConvertToCanvasAndCall(mouseEvent.x, mouseEvent.y, function (x, y) { return sheetView.OnMouseUp(x, y); });
     };
     sheetCanvas.addEventListener("touchend", function (touchEvent) {
         touchEvent.preventDefault();
-        sheetView.OnMouseUp(touchEvent.changedTouches[0].pageX, touchEvent.changedTouches[0].pageY);
+        ConvertToCanvasAndCall(touchEvent.changedTouches[0].pageX, touchEvent.changedTouches[0].pageY, function (x, y) { return sheetView.OnMouseUp(x, y); });
     }, false);
     function paintCanvas() {
         sheetCanvas.width = window.innerWidth;
@@ -406,4 +411,9 @@ function Export() {
     var sheetCanvas = document.getElementById("mainSheet");
     sheetView.PrepareExport();
     window.location.href = sheetCanvas.toDataURL();
+}
+function ConvertToCanvasAndCall(x, y, func) {
+    var sheetCanvas = document.getElementById("mainSheet");
+    var rect = sheetCanvas.getBoundingClientRect();
+    func(x - rect.left, y - rect.top);
 }
