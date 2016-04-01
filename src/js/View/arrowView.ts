@@ -5,6 +5,8 @@ module View
     export class ArrowView
     {
         private points : Helpers.CartesianPoint[] = new Array<Helpers.CartesianPoint>();
+        private color : string = "#3366ff";
+        private lineWidth : number = 5;
 
         private renderingContext : CanvasRenderingContext2D;
 
@@ -29,8 +31,8 @@ module View
 
             this.renderingContext.beginPath();
 
-            this.renderingContext.strokeStyle = "orange";
-            this.renderingContext.lineWidth = 2;
+            this.renderingContext.strokeStyle = this.color;
+            this.renderingContext.lineWidth = this.lineWidth;
 
             this.renderingContext.moveTo(this.points[0].X, this.points[0].Y);
 
